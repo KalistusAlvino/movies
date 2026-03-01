@@ -31,11 +31,21 @@ app/
 │   │   ├── MovieController.php          - OMDb API integration, search, detail
 │   │   ├── FavoriteController.php       - Manage favorite movies
 │   │   └── LanguageController.php       - Handle language switching
-│   └── Middleware/
-│       └── SetLocale.php                - Middleware untuk set language
+│   ├── Middleware/
+│   │   └── SetLocale.php                - Middleware untuk set language
+│   └── Requests/
+│       ├── SearchMovieRequest.php      - Validasi search movie
+│       ├── GetEpisodeRequest.php       - Validasi get episode
+│       ├── GetByImdbRequest.php       - Validasi get by IMDb ID
+│       ├── AddFavoriteRequest.php      - Validasi add favorite
+│       └── CheckFavoriteRequest.php    - Validasi check favorite status
 ├── Models/
 │   ├── User.php                         - User model dengan relasi favorites
 │   └── FavoriteMovie.php               - Favorite movie model
+├── Services/
+│   └── OmdbService.php                 - Service untuk OMDb API integration
+└── Helpers/
+    └── ApiResponse.php                  - Helper untuk API response standard
 resources/
 ├── views/
 │   ├── layouts/
@@ -58,15 +68,27 @@ database/
 │   └── 2024_01_01_000000_create_favorite_movies_table.php
 └── seeds/
     └── TestUserSeeder.php               - Seeder untuk test user
+public/
+└── js/
+    ├── api.js                          - API wrapper dengan fetchApi dan window.api
+    ├── movies.js                        - Movie list logic (search, infinite scroll, lazy loading)
+    ├── movie-detail.js                  - Movie detail logic
+    ├── favorites.js                     - Favorites management logic
+    └── modules/
+        ├── FavoriteManager.js             - Favorite management class
+        └── UIManager.js                  - UI utilities class
 ```
 
 ### Data Flow
 1. User Login → AuthController → Validasi credentials → Session
-2. Search Movie → MovieController → OMDb API → Display results (infinite scroll)
-3. View Detail → MovieController → OMDb API → Display full details
-4. Add Favorite → FavoriteController → Store to database
-5. View Favorites → FavoriteController → Query database → Display list
-6. Language Switch → LanguageController → Update session → Refresh page
+2. Search Movie → MovieController → FormRequest validation → OmdbService → OMDb API → Display results (infinite scroll)
+3. Search Episode → MovieController → GetEpisodeRequest validation → OmdbService → OMDb API → Display episode card
+4. View Detail → MovieController → GetByImdbRequest validation → OmdbService → OMDb API → Display full details
+5. Add Favorite → FavoriteController → AddFavoriteRequest validation → Store to database
+6. Check Favorite Status → FavoriteController → CheckFavoriteRequest validation → Return favorite status
+7. Remove Favorite → FavoriteController → Delete from database
+8. View Favorites → FavoriteController → Query database → Display list
+9. Language Switch → LanguageController → Update session → Refresh page
 
 ### Key Features Implementation
 
@@ -79,8 +101,10 @@ database/
 #### OMDb API Integration
 - Search by title dengan pagination support
 - Filter by type (movie, series, episode)
+- Episode search dengan Season dan Episode number
 - Get detail by IMDb ID
 - Error handling untuk API responses
+- Service layer separation (OmdbService)
 
 #### Multi-Language Support
 - English (EN) sebagai default language
@@ -106,6 +130,16 @@ database/
 - Persistent storage di database
 - Visual indicator (gold heart) untuk favorited movies
 - Delete dengan confirmation modal
+- Real-time favorite status check
+- FavoriteManager class untuk reusable logic
+
+#### JavaScript Architecture
+- API wrapper dengan window.api object (GET, POST, PUT, DELETE)
+- Module-based JavaScript structure
+- FavoriteManager class untuk state management
+- UIManager class untuk UI utilities
+- CSRF token handling otomatis
+- Error handling terpusat
 
 ## Installation & Setup
 
@@ -117,10 +151,7 @@ database/
 
 ### Installation Steps
 
-1. Clone atau extract project:
-```bash
-cd d:\Coding\test_lamar_kerja\movie
-```
+1. Clone atau extract project
 
 2. Install dependencies:
 ```bash
@@ -155,38 +186,7 @@ php artisan db:seed
 php artisan serve
 ```
 
-8. Access aplikasi di: `http://localhost:8000`
-
-### Login Credentials
-- **Username:** aldmic
-- **Password:** 123abc123
-
-## Screenshots
-
-### Login Page
-![Login Page](screenshot_login.png)
-
-Login page dengan username dan password fields. Desain modern dengan gradient background.
-
-### Movie List Page
-![Movie List Page](screenshot_movies.png)
-
-List movie dengan infinite scroll, lazy loading untuk gambar, dan filter by type.
-
-### Movie Detail Page
-![Movie Detail Page](screenshot_detail.png)
-
-Detail movie lengkap dengan poster, plot, cast, dan tombol add to favorite.
-
-### Favorite Movies Page
-![Favorite Movies Page](screenshot_favorites.png)
-
-List favorite movies dengan opsi delete dan confirmation modal.
-
-### Language Switch
-![Language Switch](screenshot_language.png)
-
-Bahasa dapat di-switch antara English dan Indonesian melalui tombol di navbar.
+8. Access aplikasi di: `https://bookingroom.my.id/`
 
 ## API Configuration
 
@@ -199,23 +199,19 @@ Untuk menggunakan OMDb API dengan full features:
 OMDB_API_KEY=your_api_key_here
 ```
 
-Default key `trilogy` akan tetap berfungsi dengan batasan tertentu.
-
 ## Demo URL
 
 ### Live Demo
 Demo aplikasi dapat diakses di:
-**http://your-demo-url.com**
+**https://bookingroom.my.id/**
 
-### Source Code
-Source code tersedia di:
-**https://drive.google.com/your-source-code-link**
 
 ## Features
 
 ### Core Features
 - ✅ Login system dengan custom authentication
 - ✅ Movie search dengan OMDb API
+- ✅ Episode search dengan Season dan Episode number
 - ✅ Movie detail view
 - ✅ Favorite movies management (add, view, delete)
 - ✅ Multi-language support (English/Indonesian)
@@ -224,6 +220,8 @@ Source code tersedia di:
 - ✅ Responsive design
 - ✅ Modern UI/UX dengan animations
 - ✅ Error handling dan validation
+- ✅ Form Request validation untuk semua endpoints
+- ✅ Service layer untuk API integration
 
 ### Technical Highlights
 - RESTful API integration

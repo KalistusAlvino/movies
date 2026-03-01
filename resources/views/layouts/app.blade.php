@@ -162,8 +162,8 @@
         @yield('content')
     </main>
 
-    @stack('scripts')
     <script src="{{ asset('js/api.js') }}"></script>
+    @stack('scripts')
     <script src="{{ asset('js/modules/FavoriteManager.js') }}"></script>
     <script src="{{ asset('js/modules/UIManager.js') }}"></script>
 </body>

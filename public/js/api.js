@@ -73,3 +73,10 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+window.api = {
+    get: (url) => fetchApi(url, { method: 'GET' }),
+    post: (url, data) => fetchApi(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
+    put: (url, data) => fetchApi(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) }),
+    delete: (url) => fetchApi(url, { method: 'DELETE' })
+};
